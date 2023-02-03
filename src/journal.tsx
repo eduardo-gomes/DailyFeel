@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { JournalEntryContent, Mood } from "./lib/journalEntry";
 
 function JournalForm() {
@@ -25,25 +25,23 @@ function JournalForm() {
 		setText(value);
 	}
 
+	const moods: [string, Mood][] = [
+		["Very Bad", Mood.VERY_BAD],
+		["Bad", Mood.BAD],
+		["Neutral", Mood.NEUTRAL],
+		["Good", Mood.GOOD],
+		["Very Good", Mood.VERY_GOOD]
+	];
+
 	return (
 		<form onSubmit={onSubmit}>
 			<div>
 				Mood:
-				<label>Very Bad
-					<input type="radio" onInput={onMoodInput} name="mood" value={Mood.VERY_BAD} required/>
-				</label>
-				<label>Bad
-					<input type="radio" onInput={onMoodInput} name="mood" value={Mood.BAD}/>
-				</label>
-				<label>Neutral
-					<input type="radio" onInput={onMoodInput} name="mood" value={Mood.NEUTRAL}/>
-				</label>
-				<label>Good
-					<input type="radio" onInput={onMoodInput} name="mood" value={Mood.GOOD}/>
-				</label>
-				<label>Very Good
-					<input type="radio" onInput={onMoodInput} name="mood" value={Mood.VERY_GOOD}/>
-				</label>
+				<For each={moods}>
+					{(item) => <label>{item[0]}
+						<input type="radio" onInput={onMoodInput} name="mood" value={item[1]} required/>
+					</label>}
+				</For>
 			</div>
 			<label>
 				Journal:
