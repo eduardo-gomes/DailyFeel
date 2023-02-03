@@ -1,0 +1,12 @@
+.mood {
+	margin-left: 0.5em;
+}
+
+.mood:not(.selected) {
+	color: GrayText
+}
+
+.mood input[type=radio] {
+	appearance: none;
+	margin: 0;
+}
