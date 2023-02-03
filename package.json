@@ -2,7 +2,7 @@
   "name": "dailyfeel",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
+  "main": "src/index.tsx",
   "type": "module",
   "scripts": {
     "test": "jest",

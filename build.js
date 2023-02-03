@@ -3,7 +3,7 @@ import { solidPlugin } from "esbuild-plugin-solid";
 import fs from "fs";
 
 build({
-	entryPoints: ["./src/index.ts"],
+	entryPoints: ["./src/index.tsx"],
 	bundle: true,
 	sourcemap: true,
 	minify: false,
