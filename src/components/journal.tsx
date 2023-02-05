@@ -1,6 +1,6 @@
 import "./journal.css";
 import { createSignal, For, untrack } from "solid-js";
-import { JournalEntryContent, Mood } from "../lib/journalEntry";
+import { EntryContent, Mood } from "../lib/journalTypes";
 
 function JournalForm() {
 	const [text, setText] = createSignal("");
@@ -9,7 +9,7 @@ function JournalForm() {
 
 	function onSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		let entry: JournalEntryContent = {
+		let entry: EntryContent = {
 			mood: mood(), text: text()
 		};
 		console.log(entry, Mood[entry.mood]);

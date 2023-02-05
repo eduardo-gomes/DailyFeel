@@ -1,5 +1,5 @@
 import { JournalManager } from "./journalManager";
-import { JournalEntry } from "./journalEntry";
+import { Entry } from "./journalTypes";
 
 test("New journal manager has no entries", () => {
 	const manager = new JournalManager();
@@ -26,7 +26,7 @@ test("New journal after add entries, get same content and date", () => {
 	};
 	let date = new Date();
 	manager.new_entry(date, content);
-	let got_entry = manager.get_entry_list().at(0) as JournalEntry;
+	let got_entry = manager.get_entry_list().at(0) as Entry;
 	expect(got_entry.content).toEqual(content);
 	expect(got_entry.date).toEqual(date);
 })
@@ -40,14 +40,14 @@ test("Changes on the added entry are not visible", () => {
 	let date = new Date();
 	manager.new_entry(date, content);
 	{
-		let got_entry = manager.get_entry_list().at(0) as JournalEntry;
+		let got_entry = manager.get_entry_list().at(0) as Entry;
 		expect(got_entry.content).toEqual(content);
 		expect(got_entry.date).toEqual(date);
 	}
 	content.text = "Other";
 	date.setDate(0);
 	{
-		let got_entry = manager.get_entry_list().at(0) as JournalEntry;
+		let got_entry = manager.get_entry_list().at(0) as Entry;
 		expect(got_entry.content).not.toEqual(content);
 		expect(got_entry.date).not.toEqual(date);
 	}
@@ -61,7 +61,7 @@ test("Got entries are not writable", () => {
 	};
 	let date = new Date();
 	manager.new_entry(date, content);
-	let got_entry = manager.get_entry_list().at(0) as JournalEntry;
+	let got_entry = manager.get_entry_list().at(0) as Entry;
 	expect(() => {
 		got_entry.content.text = "Other";
 	}).toThrow();

@@ -1,4 +1,4 @@
-import { JournalEntry, JournalEntryContent } from "./journalEntry";
+import { Entry, EntryContent } from "./journalTypes";
 
 function deepFreeze<T extends Object>(obj: T) {
 	for (const name of Reflect.ownKeys(obj)) {
@@ -9,14 +9,14 @@ function deepFreeze<T extends Object>(obj: T) {
 }
 
 class JournalManager {
-	array: Array<JournalEntry> = [];
+	array: Array<Entry> = [];
 
-	new_entry(date: Date, entry: JournalEntryContent) {
+	new_entry(date: Date, entry: EntryContent) {
 		let items = structuredClone({date, content: entry});
 		this.array.push(deepFreeze(items));
 	}
 
-	get_entry_list(): readonly JournalEntry[] {
+	get_entry_list(): readonly Entry[] {
 		return this.array;
 	}
 }
