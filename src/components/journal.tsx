@@ -1,10 +1,11 @@
 import "./journal.css";
-import { createSignal, For } from "solid-js";
+import { createSignal, For, untrack } from "solid-js";
 import { JournalEntryContent, Mood } from "../lib/journalEntry";
 
 function JournalForm() {
 	const [text, setText] = createSignal("");
 	const [mood, setMood] = createSignal<Mood>(Mood.NEUTRAL);
+	const initialMood = untrack(() => mood());
 
 	function onSubmit(e: SubmitEvent) {
 		e.preventDefault();
@@ -39,9 +40,10 @@ function JournalForm() {
 			<div>
 				Mood:
 				<For each={moods}>
-					{(item) => <label classList={{mood: true, selected: item[1] === mood()}}>
+					{(item) => <label class="mood">
+						<input type="radio" onInput={onMoodInput} name="mood" value={item[1]}
+							   checked={item[1] == initialMood} required/>
 						<span>{item[0]}</span>
-						<input type="radio" onInput={onMoodInput} name="mood" value={item[1]} required/>
 					</label>}
 				</For>
 			</div>

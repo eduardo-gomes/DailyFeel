@@ -2,7 +2,7 @@
 	margin-left: 0.5em;
 }
 
-.mood:not(.selected) {
+.mood input[type=radio]:not(:checked) + span {
 	color: GrayText
 }
 
