@@ -9,7 +9,7 @@ function deepFreeze<T extends Object>(obj: T) {
 }
 
 class JournalManager {
-	static instance: JournalManager;
+	static instance: JournalManager | undefined;
 	array: Array<Entry> = [];
 	private readonly db!: Promise<IDBDatabase>;
 
@@ -30,8 +30,21 @@ class JournalManager {
 		return this.array;
 	}
 
-	clear() {
+	async clear() {
 		this.array.length = 0;
+		const db = await this.db;
+		const request = db.transaction(["journal"], "readwrite").objectStore("journal").clear();
+		await new Promise((resolve, reject) => {
+			request.onerror = (_event) => {
+				console.error("Transaction failed, could not get all itens from DB", request.error);
+				reject(request.error);
+			};
+			request.onsuccess = (_event) => resolve(request.result);
+		});
+	}
+
+	async get_entry_list_async() {
+		return await this.retrieveDb();
 	}
 
 	private async openDb() {

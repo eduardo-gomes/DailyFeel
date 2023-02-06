@@ -7,8 +7,8 @@ const SAMPLE_CONTENT = {
 	mood: 0, text: "ASD"
 };
 
-function clearManager() {
-	new JournalManager().clear();
+async function clearManager() {
+	await new JournalManager().clear();
 }
 
 afterEach(clearManager);
@@ -82,5 +82,16 @@ test("Manager persists entries", () => {
 	}
 	const manager = new JournalManager();
 	let entries = manager.get_entry_list();
+	expect(entries).toHaveLength(1);
+});
+
+test("Manager persists entries across instances", async () => {
+	{
+		const manager = new JournalManager();
+		manager.new_entry(new Date(), SAMPLE_CONTENT);
+		JournalManager.instance = undefined;//Force new object to be created
+	}
+	const manager = new JournalManager();
+	let entries = await manager.get_entry_list_async();
 	expect(entries).toHaveLength(1);
 });
