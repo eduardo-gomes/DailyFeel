@@ -1,4 +1,5 @@
 import { Entry, EntryContent } from "./journalTypes";
+import { Accessor, createSignal, Setter } from "solid-js";
 
 function deepFreeze<T extends Object>(obj: T) {
 	for (const name of Reflect.ownKeys(obj)) {
@@ -10,31 +11,41 @@ function deepFreeze<T extends Object>(obj: T) {
 
 class JournalManager {
 	static instance: JournalManager | undefined;
-	array: Array<Entry> = [];
+	private readonly setArray!: Setter<Entry[]>;
+	private readonly array!: Accessor<readonly Entry[]>;
 	private readonly db!: Promise<IDBDatabase>;
 
 	constructor() {
-		if (JournalManager.instance)
-			return JournalManager.instance;
+		if (JournalManager.instance) return JournalManager.instance;
 		JournalManager.instance = this;
 		this.db = this.openDb();
 		this.db.catch(err => alert(`Could not open database: ${err}`));
+		const [array, setArray] = createSignal([], {equals: false});
+		this.array = array;
+		this.setArray = setArray;
 	}
 
 	new_entry(date: Date, entry: EntryContent) {
-		let items = structuredClone({date, content: entry});
-		this.array.push(deepFreeze(items));
-		this.addDb(items)
+		let item = structuredClone({date, content: entry});
+		this.setArray(array => {
+			array.push(deepFreeze(item));
+			return array;
+		});
+		this.addDb(item)
 			.then(r => console.log("Added item to DB", r))
 			.catch(err => alert(`Could not store entry on database: ${err}`));
 	}
 
-	get_entry_list(): readonly Entry[] {
+	async get_entry_list(): Promise<readonly Entry[]> {
+		return await this.retrieveDb();
+	}
+
+	get_entry_list_signal(): Accessor<readonly Entry[]> {
 		return this.array;
 	}
 
 	async clear() {
-		this.array.length = 0;
+		this.setArray([]);
 		const db = await this.db;
 		const request = db.transaction(["journal"], "readwrite").objectStore("journal").clear();
 		await new Promise((resolve, reject) => {
@@ -44,10 +55,6 @@ class JournalManager {
 			};
 			request.onsuccess = (_event) => resolve(request.result);
 		});
-	}
-
-	async get_entry_list_async() {
-		return await this.retrieveDb();
 	}
 
 	private async openDb() {
@@ -66,7 +73,7 @@ class JournalManager {
 					let target = event.target as IDBTransaction;
 					console.error("Database error:", target.error);
 				};
-				this.retrieveDb().then(result => this.array.concat(result));
+				this.retrieveDb().then(result => this.setArray(array => array.concat(result)));
 				resolve(db);
 			};
 		});
