@@ -1,3 +1,5 @@
+import "./indexeddb_node";
+
 import { JournalManager } from "./journalManager";
 import { Entry } from "./journalTypes";
 
