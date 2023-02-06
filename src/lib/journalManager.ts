@@ -18,12 +18,15 @@ class JournalManager {
 			return JournalManager.instance;
 		JournalManager.instance = this;
 		this.db = this.openDb();
+		this.db.catch(err => alert(`Could not open database: ${err}`));
 	}
 
 	new_entry(date: Date, entry: EntryContent) {
 		let items = structuredClone({date, content: entry});
 		this.array.push(deepFreeze(items));
-		this.addDb(items).then(r => console.log("Added item to DB", r));
+		this.addDb(items)
+			.then(r => console.log("Added item to DB", r))
+			.catch(err => alert(`Could not store entry on database: ${err}`));
 	}
 
 	get_entry_list(): readonly Entry[] {

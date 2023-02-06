@@ -1,11 +1,13 @@
 import "./journal.css";
 import { createSignal, For, untrack } from "solid-js";
 import { EntryContent, Mood } from "../lib/journalTypes";
+import { JournalManager } from "../lib/journalManager";
 
 function JournalForm() {
 	const [text, setText] = createSignal("");
 	const [mood, setMood] = createSignal<Mood>(Mood.NEUTRAL);
 	const initialMood = untrack(() => mood());
+	const manager = new JournalManager();
 
 	function onSubmit(e: SubmitEvent) {
 		e.preventDefault();
@@ -13,6 +15,7 @@ function JournalForm() {
 			mood: mood(), text: text()
 		};
 		console.log(entry, Mood[entry.mood]);
+		manager.new_entry(new Date(), entry);
 	}
 
 	function onMoodInput(e: InputEvent) {
