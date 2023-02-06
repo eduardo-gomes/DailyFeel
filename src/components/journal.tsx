@@ -2,6 +2,7 @@ import "./journal.css";
 import { createSignal, For, untrack } from "solid-js";
 import { EntryContent, Mood } from "../lib/journalTypes";
 import { JournalManager } from "../lib/journalManager";
+import JournalEntry from "./journalEntry";
 
 function JournalForm() {
 	const [text, setText] = createSignal("");
@@ -60,9 +61,13 @@ function JournalForm() {
 }
 
 function Journal() {
+	const manager = new JournalManager();
 	return (<>
 		<h1>Hello</h1>
 		<JournalForm/>
+		<For each={manager.get_entry_list_signal()()}>
+			{(item) => <JournalEntry entry={item}/>}
+		</For>
 	</>);
 }
 
