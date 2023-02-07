@@ -3,8 +3,10 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Title</title>
-	<link href="bundled.css" rel="stylesheet"/>
-	<script src="bundled.js" type="module"></script>
+	<link as="style" href="/bundled.css" rel="preload"/>
+	<link as="script" crossorigin="anonymous" href="/bundled.js" rel="preload"/>
+	<link href="/bundled.css" rel="stylesheet"/>
+	<script src="/bundled.js" type="module"></script>
 </head>
 <body>
 <noscript style="font-size: xxx-large">This page requires javascript to work!</noscript>
