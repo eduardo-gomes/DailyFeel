@@ -1,5 +1,5 @@
 import "./style.css";
-import { render } from "solid-js/web";
+import { hydrate } from "solid-js/web";
 import Journal from "./components/journal";
 
-render(() => <Journal/>, document.getElementById("App") as HTMLDivElement);
+hydrate(() => <Journal/>, document);

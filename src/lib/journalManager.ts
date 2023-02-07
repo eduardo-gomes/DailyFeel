@@ -1,6 +1,9 @@
 import { Entry, EntryContent } from "./journalTypes";
 import { Accessor, createSignal, Setter } from "solid-js";
 
+declare const IS_SSR: boolean | undefined;
+const SSR = (typeof IS_SSR !== "undefined" ? IS_SSR : false);
+
 function deepFreeze<T extends Object>(obj: T) {
 	for (const name of Reflect.ownKeys(obj)) {
 		const value = obj[name as keyof T];
@@ -18,8 +21,13 @@ class JournalManager {
 	constructor() {
 		if (JournalManager.instance) return JournalManager.instance;
 		JournalManager.instance = this;
-		this.db = this.openDb();
-		this.db.catch(err => alert(`Could not open database: ${err}`));
+		if (!SSR) {
+			this.db = this.openDb();
+			this.db.catch(err => alert(`Could not open database: ${err}`));
+		} else {
+			this.db = new Promise((_resolve, reject) => reject("Only works on browser")).catch(() => {
+			}) as Promise<IDBDatabase>;
+		}
 		const [array, setArray] = createSignal([], {equals: false});
 		this.array = array;
 		this.setArray = setArray;
