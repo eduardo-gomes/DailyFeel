@@ -1,0 +1,22 @@
+.journalEntryContainer {
+	display: flex;
+	flex-direction: column-reverse;
+}
+
+.journalEntry {
+	padding: 0.2em;
+	width: fit-content;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	background-color: Field;
+	color: FieldText;
+}
+
+.journalEntry p:not(.journal) {
+	margin: 0;
+}
+
+.journalEntry p.journal {
+	white-space: pre-wrap;
+	margin-bottom: 0;
+}
