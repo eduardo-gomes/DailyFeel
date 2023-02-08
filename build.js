@@ -32,3 +32,4 @@ build({
 });
 
 fs.mkdirSync("./out/dist", {recursive: true});
+fs.copyFileSync("_headers", "./out/dist/_headers");
