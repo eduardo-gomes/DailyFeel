@@ -19,4 +19,4 @@ function JournalEntryList(props: VoidProps<{ list: Accessor<readonly Entry[]> }>
 	</div>);
 }
 
-export default JournalEntryList;
+export { JournalEntryList };
