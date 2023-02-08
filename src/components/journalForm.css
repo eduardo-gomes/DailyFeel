@@ -1,5 +1,15 @@
+.journalForm {
+	width: max-content;
+}
+
+.moods {
+	margin-left: 1em;
+	display: inline-grid;
+	grid-template-columns: repeat(5, 1fr);
+}
+
 .mood {
-	margin-left: 0.5em;
+	text-align: center;
 }
 
 .mood input[type=radio]:not(:checked) + span {
@@ -9,4 +19,20 @@
 .mood input[type=radio] {
 	appearance: none;
 	margin: 0;
+}
+
+.text {
+	display: flex;
+}
+
+.text span {
+	margin-right: 0.5em;
+}
+
+.text textarea {
+	flex-grow: 1;
+}
+
+.journalForm input[type=submit] {
+	float: right;
 }

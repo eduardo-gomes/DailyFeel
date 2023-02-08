@@ -39,22 +39,24 @@ export function JournalForm() {
 	];
 
 	return (
-		<form onSubmit={onSubmit}>
+		<form onSubmit={onSubmit} class="journalForm">
 			<div>
 				Mood:
-				<For each={moods}>
-					{(item) => <label class="mood">
-						<input type="radio" onInput={onMoodInput} name="mood" value={item[1]}
-							   checked={item[1] == initialMood} required/>
-						<span>{item[0]}</span>
-					</label>}
-				</For>
+				<div class="moods">
+					<For each={moods}>
+						{(item) => <label class="mood">
+							<input type="radio" onInput={onMoodInput} name="mood" value={item[1]}
+								   checked={item[1] == initialMood} required/>
+							<span>{item[0]}</span>
+						</label>}
+					</For>
+				</div>
 			</div>
-			<label>
-				Journal:
-				<textarea value={text()} onInput={onText} placeholder="Type something here"></textarea>
+			<label class="text">
+				<span>Journal:</span>
+				<textarea value={text()} onInput={onText} rows="5" placeholder="Type something here"></textarea>
 			</label>
-			<input type="submit"/>
+			<div><input type="submit"/></div>
 		</form>
 	);
 }
