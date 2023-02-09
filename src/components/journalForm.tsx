@@ -56,7 +56,7 @@ export function JournalForm() {
 				<span>Journal:</span>
 				<textarea value={text()} onInput={onText} rows="5" placeholder="Type something here"></textarea>
 			</label>
-			<div><input type="submit"/></div>
+			<div class="submit"><input type="submit"/></div>
 		</form>
 	);
 }

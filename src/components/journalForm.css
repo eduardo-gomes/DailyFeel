@@ -33,6 +33,12 @@
 	flex-grow: 1;
 }
 
-.journalForm input[type=submit] {
+.submit input[type=submit] {
 	float: right;
+}
+
+.submit::after {
+	content: "";
+	clear: both;
+	display: table;
 }
