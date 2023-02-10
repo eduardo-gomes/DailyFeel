@@ -1,5 +1,8 @@
 .journalForm {
 	width: max-content;
+	display: grid;
+	grid-auto-flow: row;
+	grid-row-gap: 0.333em;
 }
 
 .moods {
@@ -34,6 +37,8 @@
 }
 
 .submit input[type=submit] {
+	padding-top: 1em;
+	padding-bottom: 1em;
 	float: right;
 }
 
