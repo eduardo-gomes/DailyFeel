@@ -4,6 +4,10 @@ import { deepFreeze } from "./utils/deepFreeze";
 import event_to_promise from "./utils/event_to_promise";
 import { v4 as uuidV4 } from "uuid";
 
+type DatabaseEntry = Entry & {
+	id: number
+};
+
 export class Database {
 	private static readonly version = 2;
 	private static opening: Promise<void>[] = [];
@@ -52,7 +56,7 @@ export class Database {
 	async retrieve_entries() {
 		const db = await this.db;
 		const request = db.transaction(["journal"], "readonly").objectStore("journal").getAll();
-		return new Promise<Entry[]>((resolve, reject) => {
+		return new Promise<DatabaseEntry[]>((resolve, reject) => {
 			request.onerror = (_event) => {
 				// Handle errors!
 				console.error("Transaction failed, could not get all itens from DB", request.error);
