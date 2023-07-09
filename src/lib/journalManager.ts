@@ -16,7 +16,7 @@ class JournalManager {
 		const [array, setArray] = createSignal([], {equals: false});
 		this.array = array;
 		this.setArray = setArray;
-		// this.database.retrieveDb().then(result => this.setArray(array => array.concat(result)));
+		this.database.retrieve_entries().then(result => this.setArray(array => array.concat(result)));
 	}
 
 	new_entry(date: Date, entry: EntryContent) {
