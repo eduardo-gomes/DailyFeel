@@ -2,6 +2,7 @@ import { Entry, EntryContent } from "./journalTypes";
 import { Accessor, createSignal, Setter } from "solid-js";
 import { Database } from "./database";
 import { deepFreeze } from "./utils/deepFreeze";
+import { SSR } from "./ssr_const";
 
 class JournalManager {
 	static instance: JournalManager | undefined;
@@ -16,7 +17,12 @@ class JournalManager {
 		const [array, setArray] = createSignal([], {equals: false});
 		this.array = array;
 		this.setArray = setArray;
-		this.database.retrieve_entries().then(result => this.setArray(array => array.concat(result)));
+		this.database.retrieve_entries().then(result => this.setArray(array => array.concat(result))).catch((err) => {
+			//Ignore database error on SSR
+			if (SSR && "Database only works on client" == err)
+				return;
+			else throw err;
+		});
 	}
 
 	new_entry(date: Date, entry: EntryContent) {
