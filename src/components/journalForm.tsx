@@ -14,7 +14,7 @@ export function JournalForm() {
 		let entry: EntryContent = {
 			mood: mood(), text: text()
 		};
-		console.log(entry, Mood[entry.mood]);
+		console.log("Creating new entry", entry, Mood[entry.mood]);
 		manager.new_entry(new Date(), entry);
 	}
 

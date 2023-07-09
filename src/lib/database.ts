@@ -94,7 +94,7 @@ export class Database {
 		await event_to_promise(request);
 		if (typeof request.result !== "string") throw "Failed to get client_id";
 		const id = request.result;
-		console.warn("Got id", request.result);
+		console.info("Retrieved client id", request.result);
 		return id;
 	}
 
