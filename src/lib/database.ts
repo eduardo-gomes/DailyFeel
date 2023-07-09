@@ -1,11 +1,16 @@
 import { Entry } from "./journalTypes";
 import { SSR } from "./ssr_const";
 import { deepFreeze } from "./utils/deepFreeze";
+import event_to_promise from "./utils/event_to_promise";
+import { v4 as uuidV4 } from "uuid";
 
 export class Database {
+	private static readonly version = 2;
 	private static opening: Promise<void>[] = [];
+	readonly ready: Promise<void>;
 	private readonly db!: Promise<IDBDatabase>;
 	private readonly name: string;
+	private id: string | undefined;
 
 	constructor(name?: string) {
 		this.name = name ?? "journal";//Used to isolate concurrent test suites
@@ -14,10 +19,22 @@ export class Database {
 			this.db = this.openDb(lock);
 			this.db.finally(resolver);
 			this.db.catch(err => alert(`Could not open database: ${err}`));
+			this.ready = this.retrieve_id().then((id) => {
+				this.id = id;
+				return;
+			});
 		} else {
-			this.db = new Promise((_resolve, reject) => reject("Only works on browser")).catch(() => {
-			}) as Promise<IDBDatabase>;
+			const error = Promise.reject("Database only works on client");
+			this.db = error as Promise<IDBDatabase>;
+			this.ready = error;
+			const ignore = (err: any) => console.warn("Ignoring error trying to open database in SSR", err);
+			error.catch(ignore);
 		}
+	}
+
+	get client_id() {
+		if (this.id === undefined) throw "Database not ready";
+		return this.id;
 	}
 
 	async clear() {
@@ -25,7 +42,7 @@ export class Database {
 		const request = db.transaction(["journal"], "readwrite").objectStore("journal").clear();
 		await new Promise((resolve, reject) => {
 			request.onerror = (_event) => {
-				console.error("Transaction failed, could not get all itens from DB", request.error);
+				console.error("Transaction failed, could not erase all itens from DB", request.error);
 				reject(request.error);
 			};
 			request.onsuccess = (_event) => resolve(request.result);
@@ -67,6 +84,16 @@ export class Database {
 		});
 	}
 
+	private async retrieve_id(): Promise<string> {
+		const db = await this.db;
+		const request = db.transaction(["client_info"], "readonly").objectStore("client_info").get("id");
+		await event_to_promise(request);
+		if (typeof request.result !== "string") throw "Failed to get client_id";
+		const id = request.result;
+		console.warn("Got id", request.result);
+		return id;
+	}
+
 	///Database open operations will fail if a versionchange transaction is running.
 	///To avoid this, this function ensures only
 	private open_lock(): [Promise<unknown>, (() => void)] {
@@ -83,7 +110,7 @@ export class Database {
 	private async openDb(lock: Promise<unknown>) {
 		await lock;
 		console.log("Opening DB");
-		const request = window.indexedDB.open(this.name);
+		const request = window.indexedDB.open(this.name, Database.version);
 		let promise = new Promise<IDBDatabase>((resolve, reject) => {
 			request.onerror = (event) => {
 				let target = event.target as IDBOpenDBRequest;
@@ -101,12 +128,29 @@ export class Database {
 				resolve(db);
 			};
 		});
-		request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-			console.debug("Database upgrade", event.oldVersion, "to", event.newVersion);
-			const db = (event.target as IDBOpenDBRequest).result;
-
-			db.createObjectStore("journal", {keyPath: "id", autoIncrement: true});
-		};
+		request.onupgradeneeded = this.database_upgrade.bind(this);
 		return promise;
+	}
+
+	private async database_upgrade(event: IDBVersionChangeEvent) {
+		console.debug("Database upgrade", event.oldVersion, "to", event.newVersion);
+		const db = (event.target as IDBOpenDBRequest).result;
+		const open_request = event.target as IDBOpenDBRequest;
+		if (!open_request.transaction) throw new Error("Something with versionchange transaction went wrong");
+		// noinspection FallThroughInSwitchStatementJS
+
+		switch (event.oldVersion) {
+			// DatabaseEntry: {date: Date, content: EntryContent, id: number};
+			case 0:
+				console.debug("Migrating database to version 1");
+				db.createObjectStore("journal", {keyPath: "id", autoIncrement: true});
+			case 1:
+				console.debug("Migrating database to version 2");
+				db.createObjectStore("client_info");
+				const client_id = uuidV4();
+				let uuid_request = open_request.transaction.objectStore("client_info").add(client_id, "id");
+				await event_to_promise(uuid_request);
+				console.info("Defined client id", client_id);
+		}
 	}
 }

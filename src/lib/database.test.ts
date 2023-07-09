@@ -1,4 +1,5 @@
 import "./indexeddb_node";
+import { validate as uuid_check } from "uuid";
 
 import { Entry } from "./journalTypes";
 import { Database } from "./database";
@@ -108,4 +109,36 @@ test("Database data persists entries across instances", async () => {
 	const database = make_database();
 	let entries = await database.retrieve_entries();
 	expect(entries).toHaveLength(1);
+});
+
+test("Database client id throws if not connected", () => {
+	const database = make_database();
+	const get_uuid = () => database.client_id;
+	expect(get_uuid).toThrow("Database not ready");
+});
+
+test("Database client id don't throw after is ready", async () => {
+	const database = make_database();
+	await database.ready;
+	const get_uuid = () => database.client_id;
+	expect(get_uuid).not.toThrow("Database not ready");
+});
+test("Database has valid id", async () => {
+	const database = make_database();
+	await database.ready;
+	const id = database.client_id;
+	const is_uuid = uuid_check(id);
+	expect(is_uuid).toBe(true);
+});
+test("Database client id persist", async () => {
+	let id;
+	{
+		const database = make_database();
+		await database.ready;
+		id = database.client_id;
+	}
+	const database = make_database();
+	await database.ready;
+	const other_id = database.client_id;
+	expect(other_id).toMatch(id);
 });
