@@ -1,7 +1,7 @@
 import "./indexeddb_node";
 import { validate as uuid_check } from "uuid";
 
-import { Entry } from "./journalTypes";
+import { Entry, Mood } from "./journalTypes";
 import { Database } from "./database";
 
 const SAMPLE_CONTENT = {
@@ -141,4 +141,65 @@ test("Database client id persist", async () => {
 	await database.ready;
 	const other_id = database.client_id;
 	expect(other_id).toMatch(id);
+});
+
+test.failing("Database operations fails after close", async () => {
+	const database = make_database();
+	await database.ready;
+	database.close();
+
+	await database.retrieve_entries();
+});
+
+describe("Database export", () => {
+	const DATA_TEST_DB = "filled_database_test";
+	const ENTRIES = [
+		{date: new Date("2023-07-12T18:58:21-03:00"), content: {mood: Mood.NEUTRAL, text: "It works"}},
+		{date: new Date("2023-07-12T19:01:22-03:00"), content: {mood: Mood.GOOD, text: "You can export and import"}}
+	];
+
+	async function make_populated_database() {
+		const db = new Database(DATA_TEST_DB);
+		await db.ready;
+		await db.clear();
+		await Promise.all(ENTRIES.map((entry) => db.add_entry(entry)));
+		return db;
+	}
+
+	test("Database export has client id", async () => {
+		const database = await make_populated_database();
+		await database.ready;
+
+		const dump = await database.to_export();
+		expect(dump.client_id).toBe(database.client_id);
+	});
+
+	test("Exported database has entry count", async () => {
+		const database = await make_populated_database();
+		await database.ready;
+		const dump = await database.to_export();
+
+		const entries = dump.journal_length();
+		expect(entries).toBe(ENTRIES.length);
+	});
+
+	test("Imported database has same client_id", async () => {
+		const database = await make_populated_database();
+		await database.ready;
+		const dump = await database.to_export();
+
+		const imported_database = await Database.from_export(dump);
+		expect(imported_database.client_id).toBe(dump.client_id);
+		imported_database.close();
+	});
+	test("Imported database has same entries", async () => {
+		const database = await make_populated_database();
+		await database.ready;
+		const exported = await database.retrieve_entries();
+		const dump = await database.to_export();
+
+		const imported_database = await Database.from_export(dump);
+		const imported = await imported_database.retrieve_entries();
+		expect(imported).toEqual(expect.arrayContaining(exported));
+	});
 });
