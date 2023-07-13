@@ -3,6 +3,7 @@ import { validate as uuid_check } from "uuid";
 
 import { Entry, Mood } from "./journalTypes";
 import { Database } from "./database";
+import { DatabaseExport } from "./database/export";
 
 const SAMPLE_CONTENT = {
 	mood: 0, text: "ASD"
@@ -201,5 +202,22 @@ describe("Database export", () => {
 		const imported_database = await Database.from_export(dump);
 		const imported = await imported_database.retrieve_entries();
 		expect(imported).toEqual(expect.arrayContaining(exported));
+		imported_database.close();
+	});
+	test("Export and import database as json", async () => {
+		const database = await make_populated_database();
+		await database.ready;
+		const exported = await database.retrieve_entries();
+		const dump = await database.to_export();
+		
+		const json = dump.to_JSON();
+		expect(typeof json).toBe(typeof "");
+		const from_json = await DatabaseExport.import_json(json);
+		expect(from_json).toStrictEqual(dump);
+
+		const imported_database = await Database.from_export(dump);
+		const imported = await imported_database.retrieve_entries();
+		expect(imported).toEqual(expect.arrayContaining(exported));
+		imported_database.close();
 	});
 });

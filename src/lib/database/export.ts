@@ -6,7 +6,7 @@ type Data = {
 };
 
 export class DatabaseExport {
-	private data: Data;
+	private readonly data: Data;
 
 	private constructor(data: Data) {
 		this.data = data;
@@ -24,8 +24,18 @@ export class DatabaseExport {
 		return new DatabaseExport({id: db.client_id, journal: await db.retrieve_entries()})
 	}
 
+	static async import_json(dump: string): Promise<DatabaseExport> {
+		const object = JSON.parse(dump) as DatabaseExport;
+		object.data.journal.forEach((entry) => entry.date = new Date(entry.date));
+		return new DatabaseExport(object.data);
+	}
+
 	journal_length() {
 		const journal = this.data.journal;
 		return journal.length;
+	}
+
+	to_JSON() {
+		return JSON.stringify(this);
 	}
 }
