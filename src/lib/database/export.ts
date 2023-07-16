@@ -2,6 +2,7 @@ import { Database, DatabaseEntry } from "../database";
 
 type Data = {
 	id: string;
+	version: number;
 	journal: Array<DatabaseEntry>;
 };
 
@@ -20,8 +21,15 @@ export class DatabaseExport {
 		return this.data.journal;
 	}
 
+	get version() {
+		return this.data.version;
+	}
+
 	static async export(db: Database): Promise<DatabaseExport> {
-		return new DatabaseExport({id: db.client_id, journal: await db.retrieve_entries()})
+		const version = db.version;
+		const id = db.client_id;
+		const journal = await db.retrieve_entries();
+		return new DatabaseExport({id, version, journal})
 	}
 
 	static async import_json(dump: string): Promise<DatabaseExport> {

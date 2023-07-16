@@ -143,6 +143,11 @@ test("Database client id persist", async () => {
 	const other_id = database.client_id;
 	expect(other_id).toMatch(id);
 });
+test("Database open on latest version", async () => {
+	const database = make_database();
+	await database.ready;
+	expect(database.version).toBe(Database.LATEST_VERSION);
+});
 
 test.failing("Database operations fails after close", async () => {
 	const database = make_database();
@@ -184,6 +189,14 @@ describe("Database export", () => {
 		expect(entries).toBe(ENTRIES.length);
 	});
 
+	test("Exported database has version", async () => {
+		const database = await make_populated_database();
+		await database.ready;
+		const dump = await database.to_export();
+
+		expect(dump.version).toBe(database.version);
+	});
+
 	test("Imported database has same client_id", async () => {
 		const database = await make_populated_database();
 		await database.ready;
@@ -209,7 +222,7 @@ describe("Database export", () => {
 		await database.ready;
 		const exported = await database.retrieve_entries();
 		const dump = await database.to_export();
-		
+
 		const json = dump.to_JSON();
 		expect(typeof json).toBe(typeof "");
 		const from_json = await DatabaseExport.import_json(json);

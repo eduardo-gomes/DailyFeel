@@ -10,8 +10,9 @@ export type DatabaseEntry = Entry & {
 };
 
 export class Database {
-	private static readonly version = 2;
+	static readonly LATEST_VERSION = 2;
 	private static opening: Promise<void>[] = [];
+	readonly version: number;
 	readonly ready: Promise<void>;
 	private readonly db!: Promise<IDBDatabase>;
 	private readonly name: string;
@@ -19,6 +20,7 @@ export class Database {
 
 	constructor(name?: string, import_id?: string) {
 		this.name = name ?? "journal";//Used to isolate concurrent test suites
+		this.version = Database.LATEST_VERSION;
 		if (!SSR) {
 			const [lock, resolver] = this.open_lock();
 			this.db = this.openDb(lock, import_id);
@@ -40,6 +42,16 @@ export class Database {
 	get client_id() {
 		if (this.id === undefined) throw "Database not ready";
 		return this.id;
+	}
+
+	static async from_export(source: DatabaseExport): Promise<Database> {
+		const name = "import_for_" + source.client_id;
+		await event_to_promise(window.indexedDB.deleteDatabase(name));
+		const db = new Database(name, source.client_id);
+		await db.ready;
+		const operations = source.journal_entries.map((entry) => db.add_entry(entry));
+		await Promise.all(operations);
+		return db;
 	}
 
 	async clear() {
@@ -89,6 +101,16 @@ export class Database {
 		});
 	}
 
+	///Database open operations will fail if a versionchange transaction is running.
+
+	async to_export() {
+		return await DatabaseExport.export(this);
+	}
+
+	close() {
+		this.db.then((db) => db.close());
+	}
+
 	private async retrieve_id(): Promise<string> {
 		const db = await this.db;
 		const request = db.transaction(["client_info"], "readonly").objectStore("client_info").get("id");
@@ -99,7 +121,6 @@ export class Database {
 		return id;
 	}
 
-	///Database open operations will fail if a versionchange transaction is running.
 	///To avoid this, this function ensures only
 	private open_lock(): [Promise<unknown>, (() => void)] {
 		const lock = Promise.all(Database.opening);
@@ -112,28 +133,10 @@ export class Database {
 		return [lock, resolver];
 	}
 
-	static async from_export(source: DatabaseExport): Promise<Database> {
-		const name = "import_for_" + source.client_id;
-		await event_to_promise(window.indexedDB.deleteDatabase(name));
-		const db = new Database(name, source.client_id);
-		await db.ready;
-		const operations = source.journal_entries.map((entry) => db.add_entry(entry));
-		await Promise.all(operations);
-		return db;
-	}
-
-	async to_export() {
-		return await DatabaseExport.export(this);
-	}
-
-	close() {
-		this.db.then((db) => db.close());
-	}
-
 	private async openDb(lock: Promise<unknown>, client_id?: string) {
 		await lock;
 		console.log("Opening DB");
-		const request = window.indexedDB.open(this.name, Database.version);
+		const request = window.indexedDB.open(this.name, this.version);
 		let promise = new Promise<IDBDatabase>((resolve, reject) => {
 			request.onerror = (event) => {
 				let target = event.target as IDBOpenDBRequest;
