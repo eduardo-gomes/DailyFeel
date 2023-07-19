@@ -48,6 +48,10 @@ class JournalManager {
 		this.setArray([]);
 		await this.database.clear();
 	}
+
+	export() {
+		return this.database.to_export().then((exp) => exp.to_JSON());
+	}
 }
 
 export { JournalManager };
