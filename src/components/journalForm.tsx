@@ -1,14 +1,39 @@
 import "./journalForm.css";
-import { createSignal, For } from "solid-js";
+import { createSignal, For, Setter, Signal } from "solid-js";
 import { EntryContent, Mood } from "../lib/journalTypes";
 import { JournalManager } from "../lib/journalManager";
+import { SSR } from "../lib/ssr_const";
 
 const INITIAL_MOOD = Mood.NEUTRAL;
 
+/// Signal that persists data with localStorage
+function persistentTextSignal(): Signal<string> {
+	const key = "new_journal";
+
+	function getItem() {
+		if (SSR) return "";
+		return localStorage.getItem(key) ?? "";
+	}
+
+	function setItem(value: string) {
+		localStorage.setItem(key, value);
+	}
+
+	const [text, setText] = createSignal(getItem());
+	const set: Setter<string> = (value) => {
+		const text = setText(value);
+		setItem(text);
+		return text;
+	}
+
+	return [text, set];
+}
+
 export function JournalForm() {
 	const [locked, setLocked] = createSignal(false);
-	const [text, setText] = createSignal("");
+	const [persistentText, setText] = persistentTextSignal();
 	const [mood, setMood] = createSignal<Mood>(INITIAL_MOOD);
+	const text = () => locked() ? "Saving..." : persistentText();
 	const manager = new JournalManager();
 
 	function onSubmit(e: SubmitEvent) {
@@ -16,16 +41,13 @@ export function JournalForm() {
 
 		function lock() {
 			setLocked(true);
-			setText("Saving...");
 		}
 
 		function unlock() {
 			setLocked(false);
-			setText(entry.text);
 		}
 
-		function unlock_clear() {
-			unlock();
+		function clear() {
 			setText("");
 			setMood(INITIAL_MOOD);
 		}
@@ -35,7 +57,7 @@ export function JournalForm() {
 		};
 		console.log("Creating new entry", entry, Mood[entry.mood]);
 		lock();
-		manager.new_entry(new Date(), entry).then(unlock_clear).catch(unlock);
+		manager.new_entry(new Date(), entry).then(clear).finally(unlock);
 	}
 
 	function onMoodInput(e: InputEvent) {
@@ -61,7 +83,6 @@ export function JournalForm() {
 	return (
 		<form onSubmit={onSubmit} class="journalForm">
 			<div>
-				Locked: {JSON.stringify(locked())}<br/>
 				Mood:
 				<div class="moods">
 					<For each={moods}>
