@@ -1,21 +1,41 @@
 import "./journalForm.css";
-import { createSignal, For, untrack } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { EntryContent, Mood } from "../lib/journalTypes";
 import { JournalManager } from "../lib/journalManager";
 
+const INITIAL_MOOD = Mood.NEUTRAL;
+
 export function JournalForm() {
+	const [locked, setLocked] = createSignal(false);
 	const [text, setText] = createSignal("");
-	const [mood, setMood] = createSignal<Mood>(Mood.NEUTRAL);
-	const initialMood = untrack(() => mood());
+	const [mood, setMood] = createSignal<Mood>(INITIAL_MOOD);
 	const manager = new JournalManager();
 
 	function onSubmit(e: SubmitEvent) {
 		e.preventDefault();
+
+		function lock() {
+			setLocked(true);
+			setText("Saving...");
+		}
+
+		function unlock() {
+			setLocked(false);
+			setText(entry.text);
+		}
+
+		function unlock_clear() {
+			unlock();
+			setText("");
+			setMood(INITIAL_MOOD);
+		}
+
 		let entry: EntryContent = {
 			mood: mood(), text: text()
 		};
 		console.log("Creating new entry", entry, Mood[entry.mood]);
-		manager.new_entry(new Date(), entry);
+		lock();
+		manager.new_entry(new Date(), entry).then(unlock_clear).catch(unlock);
 	}
 
 	function onMoodInput(e: InputEvent) {
@@ -41,12 +61,13 @@ export function JournalForm() {
 	return (
 		<form onSubmit={onSubmit} class="journalForm">
 			<div>
+				Locked: {JSON.stringify(locked())}<br/>
 				Mood:
 				<div class="moods">
 					<For each={moods}>
 						{(item) => <label class="mood">
 							<input type="radio" onInput={onMoodInput} name="mood" value={item[1]}
-								   checked={item[1] == initialMood} required/>
+								   checked={item[1] == mood()} disabled={locked()} required/>
 							<span>{item[0]}</span>
 						</label>}
 					</For>
@@ -54,9 +75,10 @@ export function JournalForm() {
 			</div>
 			<label class="text">
 				<span>Journal:</span>
-				<textarea value={text()} onInput={onText} rows="5" placeholder="Type something here"></textarea>
+				<textarea value={text()} onInput={onText} rows="5" placeholder="Type something here"
+						  disabled={locked()}></textarea>
 			</label>
-			<div class="submit"><input type="submit"/></div>
+			<div class="submit"><input type="submit" disabled={locked()}/></div>
 		</form>
 	);
 }

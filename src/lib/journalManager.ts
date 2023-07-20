@@ -31,9 +31,12 @@ class JournalManager {
 			array.push(deepFreeze(item));
 			return array;
 		});
-		this.database.add_entry(item)
+		return this.database.add_entry(item)
 			.then(r => console.log("Added item to DB", r))
-			.catch(err => alert(`Could not store entry on database: ${err}`));
+			.catch(err => {
+				alert(`Could not store entry on database: ${err}`);
+				throw err;
+			});
 	}
 
 	async get_entry_list(): Promise<readonly Entry[]> {
