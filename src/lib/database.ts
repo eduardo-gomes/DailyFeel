@@ -225,10 +225,10 @@ export class Database {
 				const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null;
 				if (!cursor) {
 					db.deleteObjectStore("journal_upgrade_key");
+					console.log("Journal storage was upgraded to use UUID, database migrated to version 3");
 					return;
 				}
-				const entry = cursor.value as DatabaseEntry;
-				const request = journal.add(entry);
+				journal.add(cursor.value as DatabaseEntry);
 				cursor.continue();
 			};
 		}
@@ -239,19 +239,15 @@ export class Database {
 			old_journal_cursor.onsuccess = (event: Event) => {
 				//Upgrade and store a copy of entries
 				const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null;
-				if (!cursor) {
-					console.log("all journal entries were upgraded and stored on journal_upgrade_key");
-					copy_to_journal();
-					return
-				}
+				if (!cursor)
+					return copy_to_journal();
 				const upgraded = this.to_entry_with_id(cursor.value as Entry);
-				const request = upgraded_store.add(upgraded);
+				upgraded_store.add(upgraded);
 				cursor.continue();
 			}
 		};
 
 		console.debug("Migrating database to version 3");
 		upgrade();
-		console.log("Migrated journal ids to UUID v5");
 	}
 }
