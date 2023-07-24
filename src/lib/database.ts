@@ -2,11 +2,11 @@ import { Entry } from "./journalTypes";
 import { SSR } from "./ssr_const";
 import { deepFreeze } from "./utils/deepFreeze";
 import event_to_promise from "./utils/event_to_promise";
-import { v4 as uuidV4 } from "uuid";
+import { v4 as uuidV4, v5 as uuidv5 } from "uuid";
 import { DatabaseExport } from "./database/export";
 
 export type DatabaseEntry = Entry & {
-	id: number
+	id: string | number
 };
 
 export class Database {
@@ -40,7 +40,7 @@ export class Database {
 	}
 
 	get client_id() {
-		if (this.id === undefined) throw "Database not ready";
+		if (this.id === undefined) throw "Database not ready, can not get client id";
 		return this.id;
 	}
 
@@ -85,10 +85,18 @@ export class Database {
 		});
 	}
 
-	async add_entry(item: Entry) {
+	/// Add entry to database and return its ID
+	async add_entry(item: Entry | DatabaseEntry) {
+		if (this.id == undefined) await this.ready;
+		const timestamp = item.date.toISOString();
+		item = {...item, id: uuidv5(timestamp, this.client_id)};
+		return await this.add_entry_operation(item);
+	}
+
+	async add_entry_operation(item: Entry) {
 		const db = await this.db;
 		const request = db.transaction(["journal"], "readwrite").objectStore("journal").add(item);
-		return new Promise<void>((resolve, reject) => {
+		return new Promise<IDBValidKey>((resolve, reject) => {
 			request.onerror = (_event) => {
 				// Handle errors!
 				console.error("Transaction failed, could not add item to DB", request.error);
@@ -96,7 +104,7 @@ export class Database {
 			};
 			request.onsuccess = (_event) => {
 				console.log("Item was added to DB", request.result);
-				resolve();
+				resolve(request.result);
 			};
 		});
 	}

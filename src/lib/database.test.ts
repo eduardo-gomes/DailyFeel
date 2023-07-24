@@ -1,5 +1,5 @@
 import "./indexeddb_node";
-import { validate as uuid_check } from "uuid";
+import { v5 as uuidv5, validate as uuid_check } from "uuid";
 
 import { Entry, Mood } from "./journalTypes";
 import { Database } from "./database";
@@ -155,6 +155,27 @@ test.failing("Database operations fails after close", async () => {
 	database.close();
 
 	await database.retrieve_entries();
+});
+
+test("Add entry returns entry id", async () => {
+	const database = make_database();
+	const entry: Entry = {date: new Date(), content: SAMPLE_CONTENT};
+	const id = await database.add_entry(entry);
+
+	const got = (await database.retrieve_entries())[0];
+	expect(got.id).toBe(id);
+});
+
+test("Entry id is an UUIDv5 generated from the client id and entry date", async () => {
+	const database = make_database();
+	await database.ready;
+	const entry: Entry = {date: new Date(), content: SAMPLE_CONTENT};
+	const date_str = entry.date.toISOString();
+	const expected_id = uuidv5(date_str, database.client_id);
+
+	console.log(date_str, expected_id);
+	const id = await database.add_entry(entry);
+	expect(id).toBe(expected_id);
 });
 
 describe("Database export", () => {
