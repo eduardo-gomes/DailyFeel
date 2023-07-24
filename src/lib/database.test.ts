@@ -217,7 +217,7 @@ describe("Database export", () => {
 		expect(imported).toEqual(expect.arrayContaining(exported));
 		imported_database.close();
 	});
-	test("Export and import database as json", async () => {
+	test("Export and import DatabaseExport as json", async () => {
 		const database = await make_populated_database();
 		await database.ready;
 		const exported = await database.retrieve_entries();
@@ -226,11 +226,7 @@ describe("Database export", () => {
 		const json = dump.to_JSON();
 		expect(typeof json).toBe(typeof "");
 		const from_json = await DatabaseExport.import_json(json);
+		//imported DatabaseExport is equal to exported
 		expect(from_json).toStrictEqual(dump);
-
-		const imported_database = await Database.from_export(dump);
-		const imported = await imported_database.retrieve_entries();
-		expect(imported).toEqual(expect.arrayContaining(exported));
-		imported_database.close();
 	});
 });
