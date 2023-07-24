@@ -178,12 +178,28 @@ test("Entry id is an UUIDv5 generated from the client id and entry date", async 
 	expect(id).toBe(expected_id);
 });
 
+test("Stored entry has client_id and data used to generate it's uuid", async () => {
+	const database = make_database();
+	await database.ready;
+	const entry: Entry = {date: new Date(), content: SAMPLE_CONTENT};
+	await database.add_entry(entry);
+
+	const got = (await database.retrieve_entries())[0];
+	expect(got.created_at).toBe(database.client_id);
+	const date_str = got.date.toISOString();
+	const expected_id = uuidv5(date_str, got.created_at);
+
+	console.log(date_str, expected_id);
+	expect(got.id).toBe(expected_id);
+});
+
 describe("Database export", () => {
 	const DATA_TEST_DB = "filled_database_test";
 	const ENTRIES = [
 		{date: new Date("2023-07-12T18:58:21-03:00"), content: {mood: Mood.NEUTRAL, text: "It works"}},
 		{date: new Date("2023-07-12T19:01:22-03:00"), content: {mood: Mood.GOOD, text: "You can export and import"}}
 	];
+	const EXPORT_V2 = '{"data":{"id":"4c7d9ed9-4603-494a-9d19-73b0e7dbc9fb","version":2,"journal":[{"date":"2023-07-12T21:58:21.000Z","content":{"mood":2,"text":"It works"},"id":1},{"date":"2023-07-12T22:01:22.000Z","content":{"mood":3,"text":"You can export and import"},"id":2}]}}';
 
 	async function make_populated_database() {
 		const db = new Database(DATA_TEST_DB);
@@ -249,5 +265,14 @@ describe("Database export", () => {
 		const from_json = await DatabaseExport.import_json(json);
 		//imported DatabaseExport is equal to exported
 		expect(from_json).toStrictEqual(dump);
+	});
+	test("Import from version 2 update all ids to UUID", async () => {
+		const old_version = await DatabaseExport.import_json(EXPORT_V2);
+		const migrated = await Database.from_export(old_version);
+		expect(migrated.version).toBeGreaterThan(old_version.version);
+		const entries = await migrated.retrieve_entries();
+		const check_id_is_uuid = entries.map((entry) => uuid_check(entry.id));
+		const any_is_not_uuid = check_id_is_uuid.indexOf(false) == -1;
+		expect(any_is_not_uuid).toBeTruthy();
 	});
 });
