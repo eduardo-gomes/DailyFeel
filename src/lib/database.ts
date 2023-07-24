@@ -88,7 +88,7 @@ export class Database {
 	async add_entry(item: Entry) {
 		const db = await this.db;
 		const request = db.transaction(["journal"], "readwrite").objectStore("journal").add(item);
-		return new Promise<IDBValidKey>((resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			request.onerror = (_event) => {
 				// Handle errors!
 				console.error("Transaction failed, could not add item to DB", request.error);
@@ -96,7 +96,7 @@ export class Database {
 			};
 			request.onsuccess = (_event) => {
 				console.log("Item was added to DB", request.result);
-				resolve(request.result);
+				resolve();
 			};
 		});
 	}
