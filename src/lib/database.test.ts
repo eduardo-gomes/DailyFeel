@@ -257,7 +257,6 @@ describe("Database export", () => {
 	test("Export and import DatabaseExport as json", async () => {
 		const database = await make_populated_database();
 		await database.ready;
-		const exported = await database.retrieve_entries();
 		const dump = await database.to_export();
 
 		const json = dump.to_JSON();

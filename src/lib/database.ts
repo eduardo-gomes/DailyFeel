@@ -86,9 +86,10 @@ export class Database {
 		});
 	}
 
-	get_entry_uuid(entry: Entry): string {
+	get_entry_uuid(entry: Entry, client_id?: string): string {
 		const timestamp = entry.date.toISOString();
-		return uuidv5(timestamp, this.client_id);
+		const namespace = client_id ?? this.client_id;
+		return uuidv5(timestamp, namespace);
 	}
 
 	async add_entry(item: Entry | DatabaseEntry) {
@@ -123,7 +124,8 @@ export class Database {
 	}
 
 	private to_entry_with_id(entry: Entry): DatabaseEntry {
-		return {...entry, id: this.get_entry_uuid(entry), created_at: this.client_id};
+		const created_at = this.client_id;
+		return {...entry, id: this.get_entry_uuid(entry, created_at), created_at: created_at};
 	}
 
 	private async retrieve_id(): Promise<string> {
