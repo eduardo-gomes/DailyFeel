@@ -78,8 +78,16 @@ export class Database {
 			};
 			request.onsuccess = (_event) => {
 				// Do something with the request.result!
-				const result = request.result;
+				const result: DatabaseEntry[] = request.result;
 				result.forEach(deepFreeze);
+				function compareFn(a: DatabaseEntry, b: DatabaseEntry): number {
+					//Not tested with unit tests
+					let strcmp = (str1: string, str2: string) => (str1 > str2) ? 1 : -1;
+					let val_a = a.date.valueOf(), val_b = b.date.valueOf();
+					if (a.date == b.date) return strcmp(a.id, b.id);
+					return val_a - val_b;
+				}
+				result.sort(compareFn);
 				console.log("Itens from DB", result);
 				resolve(result);
 			};
