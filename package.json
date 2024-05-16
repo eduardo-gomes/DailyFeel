@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "jest",
-    "build": "webpack"
+    "build-ssr": "npx webpack --config=webpack-ssr.config.cjs --mode=none",
+    "build-dev": "npm run build-ssr && npx webpack --mode=development",
+    "build": "npm run build-ssr && npx webpack --mode=production"
   },
   "author": "",
   "license": "UNLICENSED",

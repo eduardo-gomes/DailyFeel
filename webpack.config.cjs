@@ -2,8 +2,10 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
+const Rendered = /** @type {{app: string, hydration: string}}*/ require("./out/ssr/ssr.cjs").default;
+
 module.exports = /** @type { import("webpack").Configuration } */ {
-	entry: "./src/no_hydration.tsx",
+	entry: "./src/index.tsx",
 	module: {
 		rules: [
 			{
@@ -11,7 +13,7 @@ module.exports = /** @type { import("webpack").Configuration } */ {
 				exclude: /node_modules/,
 				loader: "babel-loader",
 				options: {
-					presets: ["solid", "@babel/preset-typescript"],
+					presets: [["solid", { "generate": "dom", "hydratable": true }], "@babel/preset-typescript"],
 				}
 			},
 			{
@@ -31,6 +33,9 @@ module.exports = /** @type { import("webpack").Configuration } */ {
 	plugins: [
 		new HtmlWebpackPlugin({
 			template: "src/index.html",
+			templateParameters: {
+				Rendered
+			},
 			scriptLoading: "module"
 		})
 	]
