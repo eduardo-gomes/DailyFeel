@@ -14,7 +14,7 @@ class JournalManager {
 		if (JournalManager.instance) return JournalManager.instance;
 		JournalManager.instance = this;
 		this.database = new Database();
-		const [array, setArray] = createSignal([], {equals: false});
+		const [array, setArray] = createSignal<Entry[]>([], {equals: false});
 		this.array = array;
 		this.setArray = setArray;
 		this.database.retrieve_entries().then(result => this.setArray(array => array.concat(result))).catch((err) => {
